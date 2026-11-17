@@ -318,6 +318,9 @@ IMU_MODELS = {
     'SCHA63T': 'Sensors.AP_SCHA63T',
 }
 
+# Invensensev3 WHOAMI handled by the AP_ICM45686 model
+ICM456XY_WHOAMI = 0xE9
+
 # IMUs fitted to the production board where the hwdef probes alternatives
 BOARD_IMUS = {
     'CubeOrangePlus': ('icm42688_ext', 'icm20948_ext', 'icm20649'),
@@ -958,6 +961,9 @@ def _imu_children(imu, resolved_devices, defines, name):
     }.get(driver)
     whoami = fixed_whoami if fixed_whoami is not None else _imu_whoami(
         device_name, defines)
+    if driver == 'Invensensev3' and whoami == ICM456XY_WHOAMI:
+        # the ICM-456xy register map differs from the ICM-426xx parts
+        model = 'Sensors.AP_ICM45686'
     if whoami is not None:
         properties.append('    whoAmI: 0x%02X' % whoami)
     return [(name, model, bus, cs, properties)]
