@@ -44,6 +44,10 @@ namespace Antmicro.Renode.Peripherals.Sensors
             Reset();
         }
 
+        // Fault injection: while set, the IMU stops producing FIFO samples, as
+        // if it had failed, but still answers register accesses.
+        public bool SuppressOutput { get; set; }
+
         public void Reset()
         {
             SoftReset();
@@ -190,6 +194,10 @@ namespace Antmicro.Renode.Peripherals.Sensors
 
         private void OnSampleTick()
         {
+            if(SuppressOutput)
+            {
+                return;
+            }
             var config3 = registers[FifoConfig3];
             if((config3 & FifoSensorsEnabled) != FifoSensorsEnabled ||
                (registers[PwrMgmt0] & SensorsLowNoise) != SensorsLowNoise)
