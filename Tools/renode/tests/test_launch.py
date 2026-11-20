@@ -634,6 +634,22 @@ def test_named_imus_select_cubeorangeplus_sensor_set(tmp_path):
     assert 'imu6:' not in repl
 
 
+def test_icm45686_uses_icm456xy_model(tmp_path):
+    # the README's ICM45686 CubeOrangePlus variant: ICM-456xy register map
+    generated = gen_board.generate(
+        launch.ROOT, 'CubeOrangePlus', tmp_path / 'generated',
+        state_dir=tmp_path,
+        imu_names=['icm42688_ext', 'icm42688_ext2', 'icm45686'])
+
+    repl = generated['repl'].read_text()
+    assert generated['num_imus'] == 3
+    assert 'imu0: Sensors.AP_ICM42688 @ spi4Mux 0' in repl
+    assert 'imu1: Sensors.AP_ICM42688 @ spi4Mux 1' in repl
+    imu4 = repl[repl.index('imu4: Sensors.AP_ICM45686 @ spi1Mux 0'):]
+    assert 'whoAmI: 0xE9' in imu4[:imu4.index('\n\n')]
+    assert repl.count('Sensors.AP_ICM45686') == 1
+
+
 def test_cubeorangeplus_defaults_to_real_imu_set(tmp_path):
     generated = gen_board.generate(
         launch.ROOT, 'CubeOrangePlus', tmp_path / 'generated',

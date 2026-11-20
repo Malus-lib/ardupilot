@@ -780,6 +780,11 @@ Tools/renode/run.py CubeOrangePlus --imu icm42688_ext \
     --imu icm42688_ext2 --imu icm45686
 ```
 
+An Invensensev3 IMU whose WHOAMI resolves to the ICM-45686 (0xE9) is fitted
+with `AP_ICM45686`, which models the ICM-456xy user bank (soft reset through
+REG_MISC2, FIFO count and data at 0x12-0x14) and the IREG indirect register
+window, rather than the ICM-426xx map of `AP_ICM42688`.
+
 Generated scripts set Renode to log errors only. Renode formats and queues
 every message at or above the lowest level configured for any source, and the
 STM32 models emit tagged-register warnings on most SPI and DMA accesses, which
