@@ -48,6 +48,13 @@ namespace Antmicro.Renode.Peripherals.Sensors
         // if it had failed, but still answers register accesses.
         public bool SuppressOutput { get; set; }
 
+        // injected fault, see AP_SensorFault.cs (e.g. Fault "gyro_bias=2,0,0")
+        public string Fault
+        {
+            get => fault.Spec;
+            set => fault.Set(value, physics.Current.TimestampUs, AP_SensorFault.ImuKeys);
+        }
+
         public void Reset()
         {
             SoftReset();
@@ -227,6 +234,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
             var truth = physics.Current;
             var acceleration = AP_SensorOrientation.BodyToSensor(truth.SpecificForceMS2, rotation);
             var gyro = AP_SensorOrientation.BodyToSensor(truth.GyroRadS, rotation);
+            fault.ApplyImu(acceleration, gyro, truth.TimestampUs);
             if(HighResolutionEnabled)
             {
                 PushHighResolutionSample(acceleration, gyro);
@@ -346,6 +354,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
         private readonly byte whoAmI;
         private readonly byte rotation;
         private readonly AP_PhysicsState physics;
+        private readonly AP_SensorFault fault = new AP_SensorFault(0x45686);
         private readonly AP_BoardThermalState thermal;
         private int transferByte;
         private byte currentRegister;
