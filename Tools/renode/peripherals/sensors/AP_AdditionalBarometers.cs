@@ -168,7 +168,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
         private const short Md = 1;
     }
 
-    public class AP_BMP581 : AP_I2CRegisterDevice
+    public class AP_BMP581 : AP_I2CRegisterDevice, IAP_BarometerFault
     {
         public AP_BMP581(IMachine machine)
         {
@@ -223,8 +223,8 @@ namespace Antmicro.Renode.Peripherals.Sensors
                 -8388608.0, Math.Min(8388607.0, temperatureC * 65536.0)));
             WriteS24LE(TemperatureData, temperatureRaw);
             pressureSampleNumber++;
-            var pressurePa = AP_SensorNoise.Pressure(
-                truth, pressureSampleNumber, 0xB581U, 0.5f);
+            var pressurePa = fault.ApplyPressure(AP_SensorNoise.Pressure(
+                truth, pressureSampleNumber, 0xB581U, 0.5f), truth.TimestampUs);
             var pressureRaw = (uint)Math.Round(Math.Max(
                 0.0, Math.Min(0xFFFFFF, pressurePa * 64.0)));
             WriteU24LE(PressureData, pressureRaw);
@@ -235,9 +235,18 @@ namespace Antmicro.Renode.Peripherals.Sensors
             WriteU24LE(register, (uint)value & 0xFFFFFF);
         }
 
+
+        // injected fault, see AP_SensorFault.cs (e.g. Fault "offset=120")
+        public string Fault
+        {
+            get => fault.Spec;
+            set => fault.Set(value, physics.Current.TimestampUs, AP_SensorFault.BarometerKeys);
+        }
+
         private readonly AP_PhysicsState physics;
         private int dataReadPhase;
         private uint pressureSampleNumber;
+        private readonly AP_SensorFault fault = new AP_SensorFault(0xB581);
 
         private const int TemperatureData = 0x1D;
         private const int PressureData = 0x20;
