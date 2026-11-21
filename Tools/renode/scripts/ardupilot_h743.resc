@@ -22,6 +22,7 @@ include $repo/Tools/renode/peripherals/common/AP_DWT.cs
 include $repo/Tools/renode/peripherals/common/AP_PersistentMemory.cs
 include $repo/Tools/renode/peripherals/common/AP_Hotplug.cs
 include $repo/Tools/renode/peripherals/common/AP_Physics.cs
+include $repo/Tools/renode/peripherals/common/AP_SensorFault.cs
 include $repo/Tools/renode/peripherals/common/AP_BoardThermal.cs
 include $repo/Tools/renode/peripherals/common/AP_I2CRegisterDevice.cs
 include $repo/Tools/renode/peripherals/common/AP_UARTFrameDevice.cs

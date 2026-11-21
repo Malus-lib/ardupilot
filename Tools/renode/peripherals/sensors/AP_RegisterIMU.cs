@@ -1209,6 +1209,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
             var truth = Truth();
             var accel = AP_SensorOrientation.BodyToSensor(truth.SpecificForceMS2, rotation);
             var gyro = AP_SensorOrientation.BodyToSensor(truth.GyroRadS, rotation);
+            fault.ApplyImu(accel, gyro, truth.TimestampUs);
             switch(chip)
             {
             case Chip.Bmi055Accel:
@@ -1267,6 +1268,15 @@ namespace Antmicro.Renode.Peripherals.Sensors
         {
             return physics.Current;
         }
+
+        // injected fault, see AP_SensorFault.cs (e.g. Fault "accel_bias=0,0,0.5"; a BMI088 has one model per die)
+        public string Fault
+        {
+            get => fault.Spec;
+            set => fault.Set(value, physics.Current.TimestampUs, AP_SensorFault.ImuKeys);
+        }
+
+        private readonly AP_SensorFault fault = new AP_SensorFault(0xB088);
 
         private short Bmi160Temperature()
         {
