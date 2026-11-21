@@ -153,6 +153,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
             var truth = physics.Current;
             var acceleration = AP_SensorOrientation.BodyToSensor(truth.SpecificForceMS2, rotation);
             var gyro = AP_SensorOrientation.BodyToSensor(truth.GyroRadS, rotation);
+            fault.ApplyImu(acceleration, gyro, truth.TimestampUs);
             PushWord(ScaleWord(acceleration[0], AccelScale));
             PushWord(ScaleWord(acceleration[1], AccelScale));
             PushWord(ScaleWord(acceleration[2], AccelScale));
@@ -171,6 +172,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
             var truth = physics.Current;
             var acceleration = AP_SensorOrientation.BodyToSensor(truth.SpecificForceMS2, rotation);
             var gyro = AP_SensorOrientation.BodyToSensor(truth.GyroRadS, rotation);
+            fault.ApplyImu(acceleration, gyro, truth.TimestampUs);
             var values = new int[] {
                 ScaleHighResolution(acceleration[0], AccelHighResolutionScale),
                 ScaleHighResolution(acceleration[1], AccelHighResolutionScale),
@@ -223,7 +225,16 @@ namespace Antmicro.Renode.Peripherals.Sensors
         private readonly LimitTimer sampleTimer;
         private readonly byte whoAmI;
         private readonly byte rotation;
+
+        // injected fault, see AP_SensorFault.cs (e.g. Fault "gyro_bias=2,0,0")
+        public string Fault
+        {
+            get => fault.Spec;
+            set => fault.Set(value, physics.Current.TimestampUs, AP_SensorFault.ImuKeys);
+        }
+
         private readonly AP_PhysicsState physics;
+        private readonly AP_SensorFault fault = new AP_SensorFault(0x42688);
         private readonly AP_BoardThermalState thermal;
         private int transferByte;
         private byte currentBank;

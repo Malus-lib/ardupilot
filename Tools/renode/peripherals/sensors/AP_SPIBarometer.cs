@@ -85,6 +85,21 @@ namespace Antmicro.Renode.Peripherals.Sensors
             transferByte = 0;
         }
 
+        // injected fault of the wrapped model, see AP_SensorFault.cs
+        public string Fault
+        {
+            get => (inner as IAP_BarometerFault)?.Fault ?? "";
+            set
+            {
+                var target = inner as IAP_BarometerFault;
+                if(target == null)
+                {
+                    throw new InvalidOperationException("this barometer model has no fault injection");
+                }
+                target.Fault = value;
+            }
+        }
+
         public void OnGPIO(int number, bool value)
         {
             if(value)

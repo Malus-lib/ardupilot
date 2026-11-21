@@ -10,7 +10,7 @@ using Antmicro.Renode.Peripherals.Miscellaneous;
 
 namespace Antmicro.Renode.Peripherals.Sensors
 {
-    public class AP_DPS310 : AP_I2CRegisterDevice
+    public class AP_DPS310 : AP_I2CRegisterDevice, IAP_BarometerFault
     {
         public AP_DPS310(IMachine machine)
         {
@@ -92,8 +92,8 @@ namespace Antmicro.Renode.Peripherals.Sensors
             var scale = spl06Mode ? Spl06Scale : Dps280Scale;
             SetSigned24(Pressure, (int)Math.Round(Math.Max(
                 -8388608.0, Math.Min(8388607.0,
-                    AP_SensorNoise.Pressure(
-                        truth, pressureSampleNumber, 0xD310U, 1.0f) *
+                    fault.ApplyPressure(AP_SensorNoise.Pressure(
+                        truth, pressureSampleNumber, 0xD310U, 1.0f), truth.TimestampUs) *
                     scale / PressureCoefficient))));
             var temperatureC = truth.TemperatureK - 273.15;
             SetSigned24(Temperature, (int)Math.Round(Math.Max(
@@ -108,7 +108,16 @@ namespace Antmicro.Renode.Peripherals.Sensors
             Registers[register + 2] = (byte)value;
         }
 
+
+        // injected fault, see AP_SensorFault.cs (e.g. Fault "offset=120")
+        public string Fault
+        {
+            get => fault.Spec;
+            set => fault.Set(value, physics.Current.TimestampUs, AP_SensorFault.BarometerKeys);
+        }
+
         private readonly AP_PhysicsState physics;
+        private readonly AP_SensorFault fault = new AP_SensorFault(0xD310);
         private uint pressureSampleNumber;
         private bool spl06Mode;
 
